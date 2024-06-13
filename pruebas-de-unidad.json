@@ -1,0 +1,1240 @@
+{
+	"info": {
+		"_postman_id": "0440336d-ef81-437c-a8d7-ef0976d210e7",
+		"name": "LG Copy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "6023532"
+	},
+	"item": [
+		{
+			"name": "Pruebas de unidad",
+			"item": [
+				{
+					"name": "Usuario",
+					"item": [
+						{
+							"name": "Iniciar sesión",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"//Convertir datos enviados (body: x-www-from-urlencoded) a un json para manipularlo más fácil",
+											"eval(pm.collectionVariables.get('convertUrlencodedToJson'));",
+											"let requestData = convertUrlencodedToJson(pm.request.body.urlencoded);",
+											"",
+											"//Obtener respuesta de petición",
+											"const responseJson = pm.response.json();",
+											"",
+											"//Se valida si se recibió status 200",
+											"pm.test(\"Inició sesión correctamente\", () => {",
+											"    pm.expect(pm.response.code).to.eql(200)",
+											"});",
+											"",
+											"if(pm.response.code === 200){",
+											"    //Se asigna valor de access_token a la variable de entorno ya que las demás peticiones solicitan un token",
+											"    pm.environment.set(\"access_token\", responseJson.access_token);",
+											"}",
+											"",
+											"//Se verifica si existe token y tiene el formato correcto",
+											"eval(pm.collectionVariables.get('tokenExist'));",
+											"",
+											"//Si el estatus recibido es 401",
+											"if (pm.response.code === 401) {",
+											"",
+											"    //Se definen los campos obligatorios a enviar que solicita la petición",
+											"    let requiredValues = ['email', 'password'];",
+											"    //Se valida si todos los valores que necesita la petición se enviaron",
+											"    eval(pm.collectionVariables.get('allRequiredValuesSent'));",
+											"    let allRequiredValuesArePresent = allRequiredValuesSent(requestData,requiredValues);",
+											"",
+											"    //Si todos los campos obligatorios se enviaron en la petición ",
+											"    if (allRequiredValuesArePresent) {",
+											"        //Se valida si los campos obligatorios tienen datos asignados",
+											"        eval(pm.collectionVariables.get('allRequireValuesHaveData'));",
+											"        let requiredValuesHaveData = allRequireValuesHaveData(requestData, requiredValues);",
+											"",
+											"        //Si algún campo obligatorio no tiene dato",
+											"        if (!requiredValuesHaveData) {",
+											"            pm.test(\"email tiene valor asignado\", () => {",
+											"                pm.expect(requestData.email).to.not.be.empty;",
+											"            });",
+											"",
+											"            pm.test(\"password tiene valor asignado\", () => {",
+											"                pm.expect(requestData.password).to.not.be.empty;",
+											"            });",
+											"            //Si todos los campos obligatorios tienen datos",
+											"        } else {",
+											"            pm.test(\"email enviado es un formato válido\", () => {",
+											"                pm.expect(requestData.email).to.be.a('string');",
+											"                eval(pm.collectionVariables.get('validEmail'));",
+											"                let isValidEmail = validEmail(requestData.email);",
+											"                pm.expect(isValidEmail).to.be.ok;",
+											"            });",
+											"",
+											"            pm.test(\"password enviado es un formato válido\", () => {",
+											"                pm.expect(requestData.password).to.be.a('string');",
+											"            });",
+											"",
+											"            pm.test(\"Email o password correctos\", () => {",
+											"                pm.expect(responseJson.message).not.to.eql(\"Usuario o contraseña incorrectos\");",
+											"                pm.expect(responseJson.error).not.to.eql(\"No Autorizado\");",
+											"            });",
+											"        }",
+											"        //Si no se envió algún campo obligatorio",
+											"    } else {",
+											"        pm.test(\"Se envió email\", () => {",
+											"            pm.expect(requestData).to.have.property(\"email\");",
+											"        });",
+											"",
+											"        pm.test(\"Se envió password\", () => {",
+											"            pm.expect(requestData).to.have.property(\"password\");",
+											"        });",
+											"    }",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"pm.environment.set(\"email\", \"jeennyhernandez@gmail.com\");\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "email",
+											"value": "{{email}}",
+											"description": "email [users] - required",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "jipzoi2p",
+											"description": "password [users] - required",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{localhost}}/auth/login",
+									"host": [
+										"{{localhost}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Registrar usuario",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"//Obtener datos enviados a la petición en formato .raw\r",
+											"const requestDataString = pm.request.body.raw;\r",
+											"\r",
+											"// Parsear los datos JSON\r",
+											"const requestData = JSON.parse(requestDataString); \r",
+											"\r",
+											"//Obtener respuesta de petición\r",
+											"const responseJson = pm.response.json();\r",
+											"\r",
+											"//Se verifica si existe token y tiene el formato correcto\r",
+											"eval(pm.collectionVariables.get('tokenExist'));\r",
+											"\r",
+											"//Se definen los campos obligatorios a enviar que solicita la petición\r",
+											"let requiredValues = ['name', 'email', 'cellphone', 'user_type_id'];\r",
+											"  //Se valida si todos los valores que necesita la petición se enviaron\r",
+											"    eval(pm.collectionVariables.get('allRequiredValuesSent'));\r",
+											"    let allRequiredValuesArePresent = allRequiredValuesSent(requestData,requiredValues);\r",
+											"\r",
+											"//Si todos los valores obligatorios se enviaron en la petición\r",
+											"if (allRequiredValuesArePresent) {\r",
+											"    \r",
+											"    //Se valida si los campos obligatorios tienen datos asignados\r",
+											"        eval(pm.collectionVariables.get('allRequireValuesHaveData'));\r",
+											"        let requiredValuesHaveData = allRequireValuesHaveData(requestData, requiredValues);\r",
+											"\r",
+											"    //Si algún campo no tiene valor\r",
+											"    if (!requiredValuesHaveData) {\r",
+											"        pm.test(\"name tiene valor asignado\", () => {\r",
+											"            pm.expect(requestData.name).to.not.be.empty;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"email tiene valor asignado\", () => {\r",
+											"            pm.expect(requestData.email).to.not.be.empty;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"cellphone tiene valor asignado\", () => {\r",
+											"            pm.expect(requestData.cellphone).to.not.be.empty;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"ID tipo de usuario tiene valor asignado\", () => {\r",
+											"            pm.expect(requestData.user_type_id).to.not.be.null;\r",
+											"        });\r",
+											"      //Si todos los campos tienen valor\r",
+											"    } else {\r",
+											"\r",
+											"        pm.test(\"name enviado es un formato válido\", () => {\r",
+											"            pm.expect(requestData.name).to.be.a('string');\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"email enviado es un formato válido\", () => {\r",
+											"            pm.expect(requestData.email).to.be.a('string');\r",
+											"            eval(pm.collectionVariables.get('validEmail'));\r",
+											"            let isValidEmail = validEmail(requestData.email);\r",
+											"            pm.expect(isValidEmail).to.be.ok;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"cellphone es un formato válido\", () => {\r",
+											"            pm.expect(requestData.cellphone).to.be.a('string');\r",
+											"            eval(pm.collectionVariables.get('validCellphone'));\r",
+											"            let isValidCellphone = validCellphone(requestData.cellphone);\r",
+											"            pm.expect(isValidCellphone).to.be.ok;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"user_type_id enviado es válido\", () => {\r",
+											"            eval(pm.collectionVariables.get('validUserType'));\r",
+											"            let isValidUserType = validUserType(requestData.user_type_id)\r",
+											"            pm.expect(isValidUserType).to.be.ok;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"user_role_id enviado es válido\", () => {\r",
+											"            eval(pm.collectionVariables.get('validUserRole'))\r",
+											"            let isValidUserRole = validUserRole(requestData.user_role_id)\r",
+											"            pm.expect(isValidUserRole).to.be.ok;\r",
+											"        });\r",
+											"    }\r",
+											"}else{\r",
+											"\r",
+											"    pm.test(\"Se envió nombre\", () => {\r",
+											"        pm.expect(requestData).to.have.property('name');\r",
+											"    });\r",
+											"\r",
+											"    pm.test(\"Se envió email\", () => {\r",
+											"        pm.expect(requestData).to.have.property('email');\r",
+											"    });\r",
+											"\r",
+											"    pm.test(\"Se envió cellphone\", () => {\r",
+											"        pm.expect(requestData).to.have.property('cellphone');\r",
+											"    });\r",
+											"\r",
+											"    pm.test(\"Se envió ID tipo de usuario\", () => {\r",
+											"        pm.expect(requestData).to.have.property('user_type_id');\r",
+											"    });\r",
+											"}\r",
+											"\r",
+											"//Se valida si se recibió status 201\r",
+											"pm.test(\"Registro exitoso\", ()=>{\r",
+											"    pm.expect(pm.response.code).to.eql(201);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"//Se genera un nombre random y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomName'));\r",
+											"getRandomName(\"name\");\r",
+											"\r",
+											"//Se genera un email random y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomEmail'));\r",
+											"getRandomEmail(\"email\");\r",
+											"\r",
+											"//Se genera un cellphone random y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomCellphone'));\r",
+											"getRandomCellphone(\"cellphone\");\r",
+											"\r",
+											"//Se evalúa la función \"getRandomNumber\" que servirá para las sig. 2 funciones donde se generan números aleatorios\r",
+											"eval(pm.collectionVariables.get('getRandomNumber'));\r",
+											"\r",
+											"//Se genera un id random de tipo de usuario y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomUserTypeId'));\r",
+											"getRandomUserTypeId();\r",
+											"\r",
+											"//Se genera un id random de rol de usuario y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomUserRoleId'));\r",
+											"getRandomUserRoleId();\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n   \"name\" : \"{{name}}\",\r\n   \"email\" : \"{{email}}\",\r\n   \"cellphone\" : \"{{cellphone}}\",\r\n   \"user_type_id\" : {{user_type_id}},\r\n   \"user_role_id\" : {{user_role_id}} \r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{localhost}}/panel/users",
+									"host": [
+										"{{localhost}}"
+									],
+									"path": [
+										"panel",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Obtener usuario",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"//Se valida si existe token y tiene el formato correcto\r",
+											"eval(pm.collectionVariables.get('tokenExist'));\r",
+											"\r",
+											"//Se valida si se recibió status 200\r",
+											"pm.test(\"Se obtuvieron datos del usuario correctamente\", () => {\r",
+											"    pm.expect(pm.response.code).to.eql(200)\r",
+											"});\r",
+											"\r",
+											"//console.log(\"PM.REQUEST.URL: \",pm.request.url);\r",
+											"\r",
+											"//Se valida si se envió un id de usuario y guarda el valor en dado caso \r",
+											"eval(pm.collectionVariables.get('getUserIdFromUrl'));\r",
+											"let userIdExist = getUserIdFromUrl(pm.request.url);\r",
+											"//console.log(\"RESPUESTA RETURN OBJETO\",userIdExist);\r",
+											"\r",
+											"pm.test(\"Se envió id de usuario\", () => {\r",
+											"    pm.expect(userIdExist.userIdExist).to.be.ok;\r",
+											"});\r",
+											"\r",
+											"//Si se envió un id de usuario se valida su formato\r",
+											"if(userIdExist.userIdExist){\r",
+											"    //let validUserId = tools.validUserId(userIdExist.userId);\r",
+											"    \r",
+											"    eval(pm.collectionVariables.get('validUserId'));\r",
+											"    let isValidUserId = validUserId(userIdExist.userId);\r",
+											"    //console.log(\"VALOR DE VALIDUSERID: \",isValidUserId);\r",
+											"\r",
+											"    pm.test(\"id de usuario tiene formato válido\", () => {\r",
+											"        pm.expect(isValidUserId).to.be.ok;\r",
+											"    });\r",
+											"\r",
+											"    if(isValidUserId){\r",
+											"        //console.log(\"Sí entra a validuser true\");\r",
+											"        //Obtener respuesta de petición para poder guardar el estatus del usuario (active) que servirá para poder confirmar los resultados de petición de desactivar usuario  \r",
+											"        let responseJson = pm.response.json();\r",
+											"        //console.log(\"RESPUESTA JSON: \",responseJson);\r",
+											"        pm.environment.set(\"name\", responseJson.name);\r",
+											"        pm.environment.set(\"email\",responseJson.email);\r",
+											"        pm.environment.set(\"cellphone\",responseJson.cellphone);\r",
+											"        pm.environment.set(\"user_type_id\",responseJson.user_type_id);\r",
+											"        pm.environment.set(\"user_active\",responseJson.active);\r",
+											"        pm.environment.set(\"user_id\",responseJson.user_id);\r",
+											"    }\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"eval(pm.collectionVariables.get('getRandomNumber'));\r",
+											"let userId = getRandomNumber(1,5000);\r",
+											"//console.log(\"RANDOM NUMBER: \",userId);\r",
+											"\r",
+											"//Utilizar id random\r",
+											"//pm.environment.set(\"user_id\", userId);\r",
+											"\r",
+											"//Utilizar id estático\r",
+											"pm.environment.set(\"user_id\",\"2762\")\r",
+											"\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{localhost}}/panel/users/{{user_id}}",
+									"host": [
+										"{{localhost}}"
+									],
+									"path": [
+										"panel",
+										"users",
+										"{{user_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Actualizar datos de usuario",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"//Se evalúa la función \"getRandomNumber\" que servirá para las sig. 2 funciones donde se generan números aleatorios\r",
+											"eval(pm.collectionVariables.get('getRandomNumber'));\r",
+											"\r",
+											"let userId = getRandomNumber(1,5000);\r",
+											"//console.log(\"RANDOM NUMBER: \",userId);\r",
+											"\r",
+											"//Utilizar id random\r",
+											"//pm.environment.set(\"user_id\", userId);\r",
+											"\r",
+											"//Utilizar id estático\r",
+											"pm.environment.set(\"user_id\",\"2762\")\r",
+											"\r",
+											"//Se genera un nombre random y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomName'));\r",
+											"getRandomName(\"name\");\r",
+											"\r",
+											"//Se genera un email random y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomEmail'));\r",
+											"getRandomEmail(\"email\");\r",
+											"\r",
+											"//Se genera un cellphone random y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomCellphone'));\r",
+											"getRandomCellphone(\"cellphone\");\r",
+											"\r",
+											"//Se genera un id random de tipo de usuario y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomUserTypeId'));\r",
+											"getRandomUserTypeId();\r",
+											"\r",
+											"//Se genera un id random de rol de usuario y asigna el valor en la variable de entorno del mismo nombre\r",
+											"eval(pm.collectionVariables.get('getRandomUserRoleId'));\r",
+											"getRandomUserRoleId();"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"//Obtener datos enviados a la petición en formato .raw\r",
+											"const requestDataString = pm.request.body.raw;\r",
+											"\r",
+											"// Parsear los datos JSON\r",
+											"const requestData = JSON.parse(requestDataString); \r",
+											"//console.log(\"ESTE ES EL REQUEST DATA: \",requestData);\r",
+											"//Obtener respuesta de petición\r",
+											"const responseJson = pm.response.json();\r",
+											"\r",
+											"//Se valida si existe token y tiene el formato correcto\r",
+											"eval(pm.collectionVariables.get('tokenExist'));\r",
+											"\r",
+											"//Se definen los campos obligatorios a enviar que solicita la petición\r",
+											"let requiredValues = ['name', 'email', 'cellphone', 'user_type_id'];\r",
+											"//Se valida si todos los valores que necesita la petición se enviaron\r",
+											"eval(pm.collectionVariables.get('allRequiredValuesSent'));\r",
+											"let allRequiredValuesArePresent = allRequiredValuesSent(requestData,requiredValues);\r",
+											"\r",
+											"//Si todos los valores obligatorios se enviaron en la petición\r",
+											"if (allRequiredValuesArePresent) {\r",
+											"    \r",
+											"    //Se valida si los campos obligatorios tienen datos asignados\r",
+											"    eval(pm.collectionVariables.get('allRequireValuesHaveData'));\r",
+											"    let requiredValuesHaveData = allRequireValuesHaveData(requestData,requiredValues);\r",
+											"\r",
+											"    if (!requiredValuesHaveData) {\r",
+											"        pm.test(\"name tiene valor asignado\", () => {\r",
+											"            pm.expect(requestData.name).to.not.be.empty;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"email tiene valor asignado\", () => {\r",
+											"            pm.expect(requestData.email).to.not.be.empty;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"cellphone tiene valor asignado\", () => {\r",
+											"            pm.expect(requestData.cellphone).to.not.be.empty;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"ID tipo de usuario tiene valor asignado\", () => {\r",
+											"            pm.expect(requestData.user_type_id).to.not.be.null;\r",
+											"        });\r",
+											"    } else {\r",
+											"\r",
+											"        pm.test(\"name enviado es un formato válido\", () => {\r",
+											"            pm.expect(requestData.name).to.be.a('string');\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"email enviado es un formato válido\", () => {\r",
+											"            pm.expect(requestData.email).to.be.a('string');\r",
+											"            eval(pm.collectionVariables.get('validEmail'));\r",
+											"            let isValidEmail = validEmail(requestData.email);\r",
+											"            pm.expect(isValidEmail).to.be.ok;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"cellphone es un formato válido\", () => {\r",
+											"            pm.expect(requestData.cellphone).to.be.a('string');\r",
+											"            eval(pm.collectionVariables.get('validCellphone'));\r",
+											"            let isValidCellphone = validCellphone(requestData.cellphone);\r",
+											"            pm.expect(isValidCellphone).to.be.ok;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"user_type_id enviado es válido\", () => {\r",
+											"           eval(pm.collectionVariables.get('validUserType'));\r",
+											"            let isValidUserType = validUserType(requestData.user_type_id)\r",
+											"            pm.expect(isValidUserType).to.be.ok;\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"user_role_id enviado es válido\", () => {\r",
+											"            eval(pm.collectionVariables.get('validUserRole'))\r",
+											"            let isValidUserRole = validUserRole(requestData.user_role_id)\r",
+											"            pm.expect(isValidUserRole).to.be.ok;\r",
+											"        });\r",
+											"    }\r",
+											"}else{\r",
+											"\r",
+											"    pm.test(\"Se envió nombre\", () => {\r",
+											"        pm.expect(requestData).to.have.property('name');\r",
+											"    });\r",
+											"\r",
+											"    pm.test(\"Se envió email\", () => {\r",
+											"        pm.expect(requestData).to.have.property('email');\r",
+											"    });\r",
+											"\r",
+											"    pm.test(\"Se envió cellphone\", () => {\r",
+											"        pm.expect(requestData).to.have.property('cellphone');\r",
+											"    });\r",
+											"\r",
+											"    pm.test(\"Se envió ID tipo de usuario\", () => {\r",
+											"        pm.expect(requestData).to.have.property('user_type_id');\r",
+											"    });\r",
+											"}\r",
+											"\r",
+											"//Se valida si se recibió status 201\r",
+											"pm.test(\"Actualización exitosa\", ()=>{\r",
+											"    pm.expect(pm.response.code).to.eql(201);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n   \"name\" : \"{{name}}\",\r\n   \"email\" : \"{{email}}\",\r\n   \"cellphone\" : \"{{cellphone}}\",\r\n   \"user_type_id\" : {{user_type_id}},\r\n   \"user_role_id\" : {{user_role_id}}\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{localhost}}/panel/users/{{user_id}}",
+									"host": [
+										"{{localhost}}"
+									],
+									"path": [
+										"panel",
+										"users",
+										"{{user_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Desactivar usuario",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"//Utilizar id estático\r",
+											"pm.environment.set(\"user_id\",\"2762\")\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"//Se valida si existe token y tiene el formato correcto\r",
+											"eval(pm.collectionVariables.get('tokenExist'));\r",
+											"\r",
+											"//Se valida si se recibió status 201\r",
+											"pm.test(\"Se desactivó el usuario exitosamente\", ()=>{\r",
+											"    pm.expect(pm.response.code).to.eql(201);\r",
+											"});\r",
+											"\r",
+											"\r",
+											"\r",
+											"\r",
+											"\r",
+											"\r",
+											"//Se hace una petición a \"Obtener usuario\" mediante la función \"requestObtenerUsuario\" declarada en el package library \"general\" para verificar si la propiedad \"active\" del usuario en cuestión efectivamente está 0, es decir, desactivado\r",
+											"let responseObtenerUsuario = {};\r",
+											"//Para usar esta función y manejar la respuesta de manera adecuada, se debe usar then y catch para manejar la promesa devuelta:\r",
+											"requestObtenerUsuario(pm.environment.get(\"user_id\"))\r",
+											"    .then(responseObtenerUsuario => {\r",
+											"        //Se valida si el resultado de la petición coincide con el resultado de la petición \"Obtener usuario\"\r",
+											"        pm.test(\"Coincide la respuesta recibida con el resultado al llamado de 'Obtener usuario'\", () => {\r",
+											"            pm.expect(responseObtenerUsuario.active).to.eql(0);\r",
+											"        });\r",
+											"    })\r",
+											"    .catch(err => {\r",
+											"        console.error(\"Error al obtener el usuario:\", err);\r",
+											"    });\r",
+											"\r",
+											"function requestObtenerUsuario (userId){\r",
+											"    const localhost = pm.environment.get(\"localhost\");\r",
+											"    const accessToken = pm.environment.get(\"access_token\");\r",
+											"    let responseObtenerUsuario = {};\r",
+											"\r",
+											"    // Definir la URL de la solicitud\r",
+											"    /******** EN NEWMAN, LA VARIABLE DE ENTORNO LOCALHOST RETORNA UN ERROR:\r",
+											"     \r",
+											"    GET undefined/panel/users/2762 [errored]\r",
+											"     getaddrinfo ENOTFOUND undefined\r",
+											"    ┌\r",
+											"    │ { errno: -3008, code: 'ENOTFOUND', syscall: 'getaddrinfo'\r",
+											"    │ 39m, hostname: 'undefined' }\r",
+											"    │ 'Error al obtener el usuario:', { errno: -3008, code: 'ENOT\r",
+											"    │ FOUND', syscall: 'getaddrinfo', hostname: 'undefined' }\r",
+											"    \r",
+											"    POR ESO, A CONTINUACIÓN SE DECLARÓ COMO TEXTO ESTÁTICO EN LA CONSTANTE \"url\". ENCONTRAR FORMA DE QUE SE UTILICE LA LÍNEA COMENTADA.\r",
+											"    */\r",
+											"    //const url = `${localhost}/panel/users/${userId}`;\r",
+											"    const url = `http://localhost:60033/_api/panel/users/${userId}`;\r",
+											"    //console.log('URL: ',url);\r",
+											"    //console.log(\"URL DESDE FUNCIÓN EN PACKAGE LIBRARY: \",url);\r",
+											"\r",
+											"    // Construir la solicitud de \"Obtener usuario\"\r",
+											"    const requestObtenerUsuario = {\r",
+											"        url: url,\r",
+											"        method: 'GET',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${accessToken}`\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    //console.log('URL REQUESTOBTENERUSUARIO: ',requestObtenerUsuario);\r",
+											"\r",
+											"    // Devolver una promesa. Enfoque basado en promesas para manejar la respuesta de manera asíncrona\r",
+											"    return new Promise((resolve, reject) => {\r",
+											"        pm.sendRequest(requestObtenerUsuario, function (err, res) {\r",
+											"            if (err) {\r",
+											"                console.error(err);\r",
+											"                reject(err);\r",
+											"            } else {\r",
+											"                //console.log(\"RES.JSON():\", res.json());\r",
+											"                resolve(res.json());\r",
+											"            }\r",
+											"        });\r",
+											"    });\r",
+											"}\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n   \"name\" : \"{{name}}\",\r\n   \"email\" : \"{{email}}\",\r\n   \"cellphone\" : \"{{cellphone}}\",\r\n   \"user_type_id\" : {{user_type_id}},\r\n   \"active\" : 0\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{localhost}}/panel/users/{{user_id}}",
+									"host": [
+										"{{localhost}}"
+									],
+									"path": [
+										"panel",
+										"users",
+										"{{user_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"//*************************************************************  T O O L S  *************************************************************\r",
+					"\r",
+					"//Genera un nombre aleatorio\r",
+					"pm.collectionVariables.set('getRandomName',`\r",
+					"    function getRandomName (name){\r",
+					"        pm.environment.set(\\`\\${name}\\`, pm.variables.replaceIn('{{$randomFullName}}'));\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"//Genera un correo aleatorio con un dominio en específico\r",
+					"pm.collectionVariables.set('getRandomEmail',`\r",
+					"    function getRandomEmail(email){\r",
+					"        const domain = \"@lagosdelsol.com\";\r",
+					"        let randomEmail = pm.variables.replaceIn('{{$randomUserName}}') + domain;\r",
+					"        pm.environment.set( \\`\\${email}\\`\\, randomEmail);\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"//Genera un número de teléfono aleatorio\r",
+					"pm.collectionVariables.set('getRandomCellphone',`\r",
+					"    function getRandomCellphone (cellphone){\r",
+					"        pm.environment.set(\\`\\${cellphone}\\`\\, pm.variables.replaceIn('{{$randomPhoneNumber}}'));\r",
+					"    }  \r",
+					"`);\r",
+					"\r",
+					"//Elimina guiones para el número de teléfono aleatorio\r",
+					"pm.collectionVariables.set('removeDashesNumber',`\r",
+					"    function removeDashesNumber(number) {\r",
+					"        return number.replace(/-/g, '');\r",
+					"    }\r",
+					"\r",
+					"`);\r",
+					"//******** POSIBLEMENTE AQUÍ HAYA ERROR YA QUE LA SIG. FUNCIÓN (getRandomUserTypeId) HACE LLAMADO ESTA DE GETRANDOMNUMBER\r",
+					"//Genera un número aleatorio\r",
+					"pm.collectionVariables.set('getRandomNumber',`\r",
+					"    function getRandomNumber(min, max) {\r",
+					"        return Math.floor(Math.random() * (max - min + 1)) + min;\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"//Genera un número aleatorio de id para tipo de usuario.\r",
+					"//Actualmente solo existen ID de usuarios del 1 al 6. En caso de que se agregue otro tipo de usuario, deberá cambiarse el num. max. en esta función.\r",
+					"pm.collectionVariables.set('getRandomUserTypeId',`\r",
+					"    function getRandomUserTypeId(){\r",
+					"        let randomUserTypeId = getRandomNumber(1, 6);\r",
+					"        pm.environment.set(\"user_type_id\", randomUserTypeId);\r",
+					"    }\r",
+					"`,);\r",
+					"\r",
+					"//Genera número aleatorio de id para rol de usuario.\r",
+					"pm.collectionVariables.set('getRandomUserRoleId',`\r",
+					"    function getRandomUserRoleId(){\r",
+					"        let randomRoleId = getRandomNumber(1, 5);\r",
+					"        pm.environment.set(\"user_role_id\", randomRoleId)\r",
+					"    }\r",
+					"`);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"//*************************************************************  G E N E R A L  *************************************************************\r",
+					"\r",
+					"//Revisa si existe un token de inicio de sesión. Es requerido para hacer cualquier cualquier petición\r",
+					"pm.collectionVariables.set('tokenExist', `\r",
+					"    pm.test(\"Existe token y tiene formato correcto\", () => {\r",
+					"        // pm.expect(responseJson.access_token).to.exist\r",
+					"        // pm.expect(responseJson.access_token).to.be.a('string')\r",
+					"        pm.expect(pm.environment.get(\"access_token\")).to.exist;\r",
+					"        pm.expect(pm.environment.get(\"access_token\")).to.be.a('string');\r",
+					"        pm.expect(pm.environment.get(\"access_token\")).to.not.be.undefined;\r",
+					"        pm.expect(pm.environment.get(\"access_token\")).to.not.be.null;\r",
+					"        pm.expect(pm.environment.get(\"access_token\")).to.not.be.empty;\r",
+					"    });\r",
+					"`);\r",
+					"\r",
+					"//Valida si los valores obligatorios que requiere la petición son enviados\r",
+					"pm.collectionVariables.set('allRequiredValuesSent',`\r",
+					"    function allRequiredValuesSent(requestData, requiredValues) {\r",
+					"        //console.log(\"REQUESTDATA RECIBIDO EN FUNCIÓN PACKAGE LIBRARY: \",requestData);\r",
+					"        let allRequiredValuesArePresent = true;\r",
+					"\r",
+					"        pm.test(\"Se enviaron todos los campos obligatorios\", () => {\r",
+					"            try {\r",
+					"                pm.expect(requestData).to.include.all.keys(...requiredValues);\r",
+					"                allRequiredValuesArePresent = true;\r",
+					"            } catch (e) {\r",
+					"                allRequiredValuesArePresent = false;\r",
+					"            }\r",
+					"            pm.expect(allRequiredValuesArePresent).to.be.true;\r",
+					"        });\r",
+					"        return allRequiredValuesArePresent;\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"//Valida si los valores obligatorios que requiere la petición tienen datos asignados\r",
+					"pm.collectionVariables.set('allRequireValuesHaveData',`\r",
+					"    function allRequireValuesHaveData (requestData,requiredValues){\r",
+					"    // Variable para rastrear el estado de la prueba\r",
+					"    let requiredValuesHaveData = true;\r",
+					"    \r",
+					"        pm.test(\"Todos los campos obligatorios tienen valores asignados\", () => {\r",
+					"            for (let propiedad of requiredValues) {\r",
+					"                // Verificar si el valor de la propiedad es nulo o vacío\r",
+					"                let valueType = typeof requestData[propiedad];\r",
+					"                let value = requestData[propiedad];\r",
+					"    \r",
+					"                if (valueType === \"string\") {\r",
+					"                    //requiredValuesHaveData = pm.expect(value).to.not.be.empty;\r",
+					"                   if (value.trim() === '') {\r",
+					"                       requiredValuesHaveData = false;\r",
+					"                       break;\r",
+					"                   }\r",
+					"                } else if (valueType != \"string\" || valueType === \"number\") {\r",
+					"                    // console.log(\"VALOR NUMÉRICO \",valueType);\r",
+					"                    //requiredValuesHaveData = pm.expect(value).to.not.be.null;\r",
+					"                   if (value === null) {\r",
+					"                       requiredValuesHaveData = false;\r",
+					"                       break;\r",
+					"                   }\r",
+					"                }\r",
+					"            }\r",
+					"            // Establecer la variable de entorno\r",
+					"            pm.environment.set(\"requiredValuesHaveData\", requiredValuesHaveData);\r",
+					"            pm.expect(requiredValuesHaveData).to.be.true;\r",
+					"        });\r",
+					"        return requiredValuesHaveData;\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"//Convertir datos enviados (body: x-www-from-urlencoded) a un json para manipularlo más fácil\r",
+					"pm.collectionVariables.set('convertUrlencodedToJson',`\r",
+					"        function convertUrlencodedToJson(requestBodyUrlencoded){\r",
+					"        // 1: Obtener datos enviados a la petición\r",
+					"        let requestDataUrlencoded = requestBodyUrlencoded;\r",
+					"\r",
+					"        //console.log(\"REQUESTDATA ORIGINAL RECIBIDO EN FUNCIÓN\",requestDataUrlencoded);\r",
+					"\r",
+					"        // 2: Filtrar solo los parámetros que no están deshabilitados\r",
+					"        let activeParams = requestDataUrlencoded.filter(param => !param.disabled);\r",
+					"        //console.log(\"ACTIVE PARAMS\",activeParams)\r",
+					"\r",
+					"        // 3: Convertir a una cadena x-www-form-urlencoded\r",
+					"        let requestDataString = activeParams.map(param => \\`\\${encodeURIComponent(param.key)}=\\${encodeURIComponent(param.value)}\\`).join('&');\r",
+					"        //console.log(\"REQUESTDATASTRING\",requestDataString)\r",
+					"\r",
+					"        // 4: Convertir la cadena x-www-form-urlencoded a un objeto JSON\r",
+					"        let requestData = {};\r",
+					"        requestDataString.split('&').forEach(param => {\r",
+					"            let [key, value] = param.split('=');\r",
+					"            requestData[decodeURIComponent(key)] = decodeURIComponent(value);\r",
+					"        });\r",
+					"\r",
+					"        //console.log(\"REQUESTDATA FINAL\",requestData);\r",
+					"        //console.log(\"TIPO DE DATO REQUESTDATA FINAL\", typeof requestData);\r",
+					"        return requestData;\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"// //Ejecutar petición \"Obtener usuario\"\r",
+					"//   pm.collectionVariables.set('requestObtenerUsuario,',`\r",
+					"//       function requestObtenerUsuario (userId){\r",
+					"//           const localhost = pm.environment.get(\"localhost\");\r",
+					"//           const accessToken = pm.environment.get(\"access_token\");\r",
+					"//           let responseObtenerUsuario = {};\r",
+					"\r",
+					"//           // Definir la URL de la solicitud\r",
+					"//           const url = \\`\\${localhost}/panel/users/\\${userId}\\`;\r",
+					"\r",
+					"//           console.log(\"URL DESDE FUNCIÓN EN PACKAGE LIBRARY: \",url);\r",
+					"\r",
+					"//           // Construir la solicitud de \"Obtener usuario\"\r",
+					"//           const requestObtenerUsuario = {\r",
+					"//               url: url,\r",
+					"//               method: 'GET',\r",
+					"//               header: {\r",
+					"//                   'Authorization': \\`Bearer \\${accessToken}\\`\r",
+					"//               }\r",
+					"//           };\r",
+					"\r",
+					"//           // Devolver una promesa. Enfoque basado en promesas para manejar la respuesta de manera asíncrona\r",
+					"//           return new Promise((resolve, reject) => {\r",
+					"//               pm.sendRequest(requestObtenerUsuario, function (err, res) {\r",
+					"//                   if (err) {\r",
+					"//                       console.error(err);\r",
+					"//                       reject(err);\r",
+					"//                   } else {\r",
+					"//                       console.log(\"RES.JSON():\", res.json());\r",
+					"//                       resolve(res.json());\r",
+					"//                   }\r",
+					"//               });\r",
+					"//           });\r",
+					"//       }\r",
+					"//   `);\r",
+					"\r",
+					"\r",
+					"//*************************************************************  T O O L S  *************************************************************\r",
+					"\r",
+					"//Valida si un correo tiene una estructura válida\r",
+					"pm.collectionVariables.set('validEmail',`\r",
+					"    function validEmail (email){\r",
+					"        let validEmail = true;\r",
+					"        //const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[a-zA-Z]+$/;\r",
+					"        const emailRegex = /^[^\\\\s@]+@[^\\\\s@]+\\\\.[a-zA-Z]+$/;\r",
+					"\r",
+					"        try{\r",
+					"            pm.expect(email).to.match(emailRegex);\r",
+					"            validEmail = true;\r",
+					"        }catch (error){\r",
+					"            validEmail = false;\r",
+					"        }\r",
+					"        return validEmail;\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"//Valida si un número de teléfono tiene una estructura válida (que a pesar de que sea string no contenga letras)\r",
+					"pm.collectionVariables.set('validCellphone',`\r",
+					"    function validCellphone (cellphone){\r",
+					"        let validCellphone = true;\r",
+					"        const cellphoneRegex = /^[\\\\d\\\\s\\\\-()]+$/;\r",
+					"\r",
+					"        try{\r",
+					"            pm.expect(cellphone).to.match(cellphoneRegex);\r",
+					"            validCellphone = true;\r",
+					"        }catch (error){\r",
+					"            validCellphone = false;\r",
+					"        }\r",
+					"\r",
+					"    return validCellphone;\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"//Valida si el user_type_id es numérico y si es un tipo de usuario existente/válido\r",
+					"//Tipos de usuario válidos: 1,2,3,4,5,6. Si se llegara a agregar uno más, se tiene que agregar en esta función\r",
+					"pm.collectionVariables.set('validUserType',`\r",
+					"    function validUserType(user_type_id){\r",
+					"        let validUserType = true;\r",
+					"\r",
+					"        try{\r",
+					"            pm.expect(user_type_id).to.be.a('number');\r",
+					"            pm.expect([1, 2, 3, 4, 5, 6]).to.include(user_type_id);\r",
+					"            validUserType = true;\r",
+					"        }catch(error){\r",
+					"            validUserType = false;\r",
+					"        }\r",
+					"        return validUserType;\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"//Valida si el user_type_id es numérico y si es un tipo de usuario existente/válido\r",
+					"//Tipos de usuario válidos: 1,2,3,4,5,6. Si se llegara a agregar uno más, se tiene que agregar en esta función\r",
+					"pm.collectionVariables.set('validUserRole',`\r",
+					"    function validUserRole(user_role_id){\r",
+					"        let validUserRole = true;\r",
+					"\r",
+					"        try{\r",
+					"            pm.expect(user_role_id).to.be.a('number');\r",
+					"            pm.expect([1, 2, 3, 4, 5]).to.include(user_role_id);\r",
+					"            validUserRole = true;\r",
+					"        }catch(error){\r",
+					"            validUserRole = false;\r",
+					"        }\r",
+					"        return validUserRole;\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"pm.collectionVariables.set('getUserIdFromUrl',`\r",
+					"    function getUserIdFromUrl(requestUrl){\r",
+					"        let userIdExist = null;\r",
+					"        let url = requestUrl.toString();\r",
+					"        let userId = null;\r",
+					"\r",
+					"        // Utilizar una expresión regular para verificar si se envió algo después del ...users/___\r",
+					"        //let match = url.match(/\\/users\\/([^\\/]+)/);\r",
+					"        let match = url.match(/\\\\/users\\\\/([^\\\\/]+)/);\r",
+					"\r",
+					"        // Verificar que se ha encontrado un ID en la URL\r",
+					"        if (match) {\r",
+					"            userIdExist = true;\r",
+					"\r",
+					"            // Extraer el ID del resultado de la expresión regular y lo guarda en una variable para utilizar en los test\r",
+					"            userId = match[1];\r",
+					"\r",
+					"        }else {\r",
+					"            userIdExist = false;\r",
+					"        }\r",
+					"        return { userIdExist,userId };\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					"pm.collectionVariables.set('validUserId',`\r",
+					"    function validUserId (userId){\r",
+					"    let validUserId = null;\r",
+					"\r",
+					"    try{\r",
+					"        pm.expect(userId).to.not.be.null;\r",
+					"        // Prueba para validar que el string solo contenga números\r",
+					"        pm.expect(userId).to.match(/^\\\\d+$/);\r",
+					" \r",
+					"        validUserId = true;\r",
+					"        \r",
+					"    }catch(error){\r",
+					"        validUserId = false;\r",
+					"    }\r",
+					"    return validUserId;\r",
+					"    }\r",
+					"`);\r",
+					"\r",
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "requiredValuesHaveData",
+			"value": ""
+		},
+		{
+			"key": "email",
+			"value": ""
+		},
+		{
+			"key": "localhost",
+			"value": "http://localhost:60033/_api",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "name",
+			"value": ""
+		},
+		{
+			"key": "cellphone",
+			"value": ""
+		},
+		{
+			"key": "randomUserTypeId",
+			"value": ""
+		},
+		{
+			"key": "randomRoleId",
+			"value": ""
+		},
+		{
+			"key": "development_section_id",
+			"value": ""
+		},
+		{
+			"key": "currency_id",
+			"value": ""
+		},
+		{
+			"key": "status_property_id",
+			"value": ""
+		},
+		{
+			"key": "title",
+			"value": ""
+		},
+		{
+			"key": "description",
+			"value": ""
+		},
+		{
+			"key": "total_area",
+			"value": ""
+		},
+		{
+			"key": "price_m2",
+			"value": ""
+		},
+		{
+			"key": "type_lot_id",
+			"value": ""
+		},
+		{
+			"key": "price",
+			"value": ""
+		},
+		{
+			"key": "idManzana",
+			"value": ""
+		},
+		{
+			"key": "tokenExist",
+			"value": ""
+		},
+		{
+			"key": "convertUrlencodedToJson",
+			"value": ""
+		},
+		{
+			"key": "allRequiredValuesSent",
+			"value": ""
+		},
+		{
+			"key": "allRequireValuesHaveData",
+			"value": ""
+		},
+		{
+			"key": "getRandomName",
+			"value": ""
+		},
+		{
+			"key": "getRandomEmail",
+			"value": ""
+		},
+		{
+			"key": "getRandomCellphone",
+			"value": ""
+		},
+		{
+			"key": "removeDashesNumber",
+			"value": ""
+		},
+		{
+			"key": "getRandomNumber",
+			"value": ""
+		},
+		{
+			"key": "getRandomUserTypeId",
+			"value": ""
+		},
+		{
+			"key": "getRandomUserRoleId",
+			"value": ""
+		},
+		{
+			"key": "validEmail",
+			"value": ""
+		},
+		{
+			"key": "validCellphone",
+			"value": ""
+		},
+		{
+			"key": "validUserType",
+			"value": ""
+		},
+		{
+			"key": "validUserRole",
+			"value": ""
+		},
+		{
+			"key": "getUserIdFromUrl",
+			"value": ""
+		},
+		{
+			"key": "validUserId",
+			"value": ""
+		},
+		{
+			"key": "requestObtenerUsuario,",
+			"value": ""
+		}
+	]
+}
